@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { useRouter } from 'next/navigation';
 import { toast } from "react-hot-toast";
 import { motion } from "framer-motion";
+import { URL_BASE } from "../../services/api";
 
 export default function FormSignUpUser() {
     const router = useRouter();
@@ -18,42 +19,35 @@ export default function FormSignUpUser() {
         formState: { errors },
     } = useForm();
 
-    const onSubmit = async (data) => {
-        setIsSubmitting(true); // ⏳ começa o loading
-
+    const Start = async () => {
+        setIsSubmitting(true);
         try {
-            // const response = await fetch("http://127.0.0.1:8000/register", {
-            //     method: "POST",
-            //     headers: {
-            //         "Content-Type": "application/json",
-            //     },
-            //     body: JSON.stringify(data),
-            // });
+            const response = await fetch(`${URL_BASE}/register_quiz`, {
+                method: "POST",
+            });
 
-            // const result = await response.json();
+            const result = await response.json();
 
-            // if (response.ok) {
-            //     toast.success("Cadastro realizado com sucesso!");
-            //     reset();
+            if (response.ok) {
+                const { quiz_session_id } = result;
 
-            
-            // } else {
-            //     toast.error("Erro ao cadastrar: " + result.detail);
-            // }
-            //salva o token no localStorage
-            // localStorage.setItem('token', response.data.token);
+                localStorage.setItem("quiz_session_id", quiz_session_id);
+                toast.success("Sessão iniciada com sucesso!");
+                reset();
 
+                router.push("/pages/user/session");
+            } else {
+                toast.error("Erro ao iniciar sessão: " + result.detail);
+            }
 
-            router.push("pages/user/session"); // Redireciona para a página de login após o cadastro
-            toast.success("Cadastro realizado com sucesso! Redirecionando para o login...");
-            reset(); // Limpa o formulário após o envio bem-sucedido
         } catch (error) {
             console.error("Erro na requisição:", error);
             toast.error("Erro na conexão com o servidor");
         } finally {
-            setIsSubmitting(false); // ✅ encerra o loading
+            setIsSubmitting(false);
         }
     };
+
     const formatCPF = (value) => {
         return value
             .replace(/\D/g, "")
@@ -94,102 +88,22 @@ export default function FormSignUpUser() {
     });
     return (
         <>
-            <motion.div {...fadeIn(0)}>
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 max-w-md mx-auto text-white">
-                    <div>
-                        <label>Nome Completo</label>
-                        <input
-                            {...register("nome", { required: "Campo obrigatório" })}
-                            className="border p-2 w-full rounded-md text-black"
-                            placeholder="Digite seu nome"
-                            autoComplete="off"
-                            value="Julia Lopes"
-                        />
-                        {errors.nome && <p className="text-red-500 text-sm">{errors.nome.message}</p>}
-                    </div>
-
-                    {/* <div>
-                <label>Sobrenome</label>
-                <input
-                    {...register("sobrenome", { required: "Campo obrigatório" })}
-                    className="border p-2 w-full"
-                    placeholder="Digite seu sobrenome"
-                    autoComplete="off"
-                />
-                {errors.sobrenome && <p className="text-red-500 text-sm">{errors.sobrenome.message}</p>}
-            </div> */}
-
-                    <div>
-                        <label>Email</label>
-                        <input
-                            {...register("email", { required: "Campo obrigatório" })}
-                            className="border p-2 w-full rounded-md text-black"
-                            placeholder="exemplo@email.com"
-                            autoComplete="off"
-                            type="email"
-                            value={"julia@gmail.com"}
-                        />
-                        {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
-                    </div>
-
-                    <div>
-                        <label>CPF</label>
-                        <input
-                            {...register("cpf", {
-                                required: "Campo obrigatório",
-                                validate: (value) =>
-                                    validarCPF(value) || "CPF inválido",
-                            })}
-                            className="border p-2 w-full rounded-md text-black"
-                            placeholder="000.000.000-00"
-                            onChange={(e) => setValue("cpf", formatCPF(e.target.value))}
-                            value={watch("cpf") || "42117733808"}
-                            autoComplete="off"
-                        />
-                        {errors.cpf && <p className="text-red-500 text-sm">{errors.cpf.message}</p>}
-
-                    </div>
-
-                    <div>
-                        <label>Celular</label>
-                        <input
-                            {...register("celular", { required: "Campo obrigatório" })}
-                            className="border p-2 w-full rounded-md text-black"
-                            placeholder="(11) 9 8765-4321"
-                            onChange={(e) => setValue("celular", formatCelular(e.target.value))}
-                            value={watch("celular") || "16992848085"}
-                            autoComplete="off"
-                        />
-                        {errors.celular && <p className="text-red-500 text-sm">{errors.celular.message}</p>}
-                    </div>
-                    {/* ✅ Checkbox 1: Termos de uso */}
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="checkbox"
-                            {...register("aceita_termos", { required: "Você precisa aceitar os termos de uso de dados." })}
-                        />
-                        <label className="text-sm">
-                            Eu aceito os <a href="#" className="underline">termos de uso de dados</a>.
-                        </label>
-                    </div>
-                    {errors.aceita_termos && <p className="text-red-500 text-sm">{errors.aceita_termos.message}</p>}
-
-
-                  
-
-
-                    <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className={`p-2 rounded w-full transition-colors ${isSubmitting ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
-                            } text-white`}
-                    >
-                        {isSubmitting ? "Enviando..." : "Enviar"}
-                    </button>
-
-                </form>
-                {/* tratar se ja for cadastrado chamar o login */}
+            <motion.div
+                {...fadeIn(0)}
+                onClick={(e) => {
+                    if (e.target === e.currentTarget && !isSubmitting) {
+                        Start();
+                    }
+                }}
+                style={{ backgroundImage: "url('/img/fundo_descanso.png')", backgroundSize: 'cover' }}
+                className="flex flex-col items-center justify-center min-h-screen bg-gray-100"
+            >
+                {/* Conteúdo interno aqui */}
+                <motion.div {...fadeIn(0.3)}>
+                    {/* outros elementos */}
+                </motion.div>
             </motion.div>
+
         </>
     );
 }
