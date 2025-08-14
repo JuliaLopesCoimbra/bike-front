@@ -90,7 +90,7 @@ export default function Card({ onImageLoad }) {
                             <div
                                 className={` ${'w-full bg-[#122415] '
                                     } h-[7vh]
- text-[min(1.9vh,5vw)] text-white font-medium px-1 rounded-full border-4
+ text-[min(1.9vh,3vw)] text-white font-medium px-4 rounded-full border-4 
                                      border-white  transition-all flex items-center justify-center `}>{titles.user_music_title}</div>
                         )}
                     </div>
